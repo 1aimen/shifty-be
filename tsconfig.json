@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    // --- File Layout ---
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    // --- Environment Settings ---
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
+    "target": "ES2022",
+    "lib": ["ESNext"],
+    "types": ["node"],
+
+    // --- Output & Debugging ---
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+
+    // --- Strict Typechecking ---
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+
+    // --- Module & Import Behavior ---
+    "verbatimModuleSyntax": false,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
+    // --- Other ---
+    "noUncheckedSideEffectImports": true,
+    "moduleDetection": "force",
+    "jsx": "preserve"
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "scripts", "assets", "tests"]
+}
