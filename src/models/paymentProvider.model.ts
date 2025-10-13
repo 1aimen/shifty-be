@@ -1,3 +1,5 @@
+import { PaymentProviderType } from "./enums";
+
 export interface PaymentProvider {
   id: string;
   organizationId: string;

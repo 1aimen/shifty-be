@@ -7,49 +7,386 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/////////////////////////////////////////////////
-// ENUMS
-/////////////////////////////////////////////////
+model auditlog {
+  id             String        @id
+  organizationId String?
+  userId         String?
+  action         String
+  resource       String?
+  description    String?
+  metaJson       String?
+  createdAt      DateTime      @default(now())
+  organization   organization? @relation(fields: [organizationId], references: [id], map: "AuditLog_organizationId_fkey")
+  user           user?         @relation(fields: [userId], references: [id], map: "AuditLog_userId_fkey")
 
-enum UserRole {
+  @@index([organizationId], map: "AuditLog_organizationId_fkey")
+  @@index([userId], map: "AuditLog_userId_fkey")
+}
+
+model clockin {
+  id         String    @id
+  shiftId    String
+  clockInAt  DateTime  @default(now())
+  clockOutAt DateTime?
+  method     String?
+  latitude   Float?
+  longitude  Float?
+  ipAddress  String?
+  geoCountry String?
+  geoCity    String?
+  device     String?
+  createdAt  DateTime  @default(now())
+  shift      shift     @relation(fields: [shiftId], references: [id], onDelete: Cascade, map: "ClockIn_shiftId_fkey")
+
+  @@index([shiftId], map: "ClockIn_shiftId_fkey")
+}
+
+model exportfile {
+  id          String     @id
+  storageKey  String     @unique(map: "ExportFile_storageKey_key")
+  mimeType    String
+  size        Int?
+  createdAt   DateTime   @default(now())
+  downloadUrl String?
+  exportjob   exportjob?
+}
+
+model exportjob {
+  id             String           @id
+  organizationId String
+  requestedById  String?
+  format         exportjob_format
+  status         exportjob_status @default(PENDING)
+  filtersJson    String?
+  fileId         String?          @unique(map: "ExportJob_fileId_key")
+  createdAt      DateTime         @default(now())
+  completedAt    DateTime?
+  errorMessage   String?
+  exportfile     exportfile?      @relation(fields: [fileId], references: [id], map: "ExportJob_fileId_fkey")
+  organization   organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "ExportJob_organizationId_fkey")
+  user           user?            @relation(fields: [requestedById], references: [id], map: "ExportJob_requestedById_fkey")
+
+  @@index([organizationId], map: "ExportJob_organizationId_fkey")
+  @@index([requestedById], map: "ExportJob_requestedById_fkey")
+}
+
+model organization {
+  id                     String                   @id
+  name                   String
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime
+  auditlog               auditlog[]
+  exportjob              exportjob[]
+  organizationinvitation organizationinvitation[]
+  organizationsettings   organizationsettings?
+  paymentmethod          paymentmethod[]
+  paymentprovider        paymentprovider[]
+  payout                 payout[]
+  payrollrun             payrollrun[]
+  project                project[]
+  shift                  shift[]
+  timeentry              timeentry[]
+  timesheet              timesheet[]
+  user                   user[]
+  webhookevent           webhookevent[]
+}
+
+model organizationinvitation {
+  id             String                        @id
+  email          String
+  role           organizationinvitation_role   @default(EMPLOYEE)
+  token          String                        @unique(map: "OrganizationInvitation_token_key")
+  status         organizationinvitation_status @default(PENDING)
+  organizationId String
+  invitedById    String?
+  createdAt      DateTime                      @default(now())
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  user           user?                         @relation(fields: [invitedById], references: [id], map: "OrganizationInvitation_invitedById_fkey")
+  organization   organization                  @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "OrganizationInvitation_organizationId_fkey")
+
+  @@index([invitedById], map: "OrganizationInvitation_invitedById_fkey")
+  @@index([organizationId], map: "OrganizationInvitation_organizationId_fkey")
+}
+
+model organizationsettings {
+  id                  String       @id
+  organizationId      String       @unique(map: "OrganizationSettings_organizationId_key")
+  timezone            String       @default("Europe/Paris")
+  weekStartDay        Int          @default(1)
+  requireGeo          Boolean      @default(false)
+  requireDeviceLock   Boolean      @default(false)
+  minimumClockSeconds Int?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime
+  organization        organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "OrganizationSettings_organizationId_fkey")
+}
+
+model paymentmethod {
+  id               String        @id
+  userId           String?
+  organizationId   String?
+  provider         String
+  providerMethodId String
+  label            String?
+  createdAt        DateTime      @default(now())
+  organization     organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "PaymentMethod_organizationId_fkey")
+  user             user?         @relation(fields: [userId], references: [id], onDelete: Cascade, map: "PaymentMethod_userId_fkey")
+
+  @@index([organizationId], map: "PaymentMethod_organizationId_fkey")
+  @@index([userId], map: "PaymentMethod_userId_fkey")
+}
+
+model paymentprovider {
+  id             String               @id
+  organizationId String
+  type           paymentprovider_type
+  configJson     String
+  createdAt      DateTime             @default(now())
+  organization   organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "PaymentProvider_organizationId_fkey")
+  payout         payout[]
+  payrollrun     payrollrun[]
+
+  @@index([organizationId], map: "PaymentProvider_organizationId_fkey")
+}
+
+model payout {
+  id               String          @id
+  organizationId   String
+  providerId       String
+  providerPayoutId String?
+  amount           Decimal         @db.Decimal(12, 2)
+  currency         String          @default("EUR")
+  status           String
+  createdAt        DateTime        @default(now())
+  processedAt      DateTime?
+  organization     organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "Payout_organizationId_fkey")
+  paymentprovider  paymentprovider @relation(fields: [providerId], references: [id], onDelete: Cascade, map: "Payout_providerId_fkey")
+
+  @@index([organizationId], map: "Payout_organizationId_fkey")
+  @@index([providerId], map: "Payout_providerId_fkey")
+}
+
+model payrollitem {
+  id           String      @id
+  payrollRunId String?
+  timesheetId  String?     @unique(map: "PayrollItem_timesheetId_key")
+  userId       String
+  grossAmount  Decimal     @db.Decimal(12, 2)
+  taxAmount    Decimal?    @db.Decimal(12, 2)
+  netAmount    Decimal     @db.Decimal(12, 2)
+  currency     String      @default("EUR")
+  createdAt    DateTime    @default(now())
+  payrollrun   payrollrun? @relation(fields: [payrollRunId], references: [id], onDelete: Cascade, map: "PayrollItem_payrollRunId_fkey")
+  timesheet    timesheet?  @relation(fields: [timesheetId], references: [id], map: "PayrollItem_timesheetId_fkey")
+  user         user        @relation(fields: [userId], references: [id], onDelete: Cascade, map: "PayrollItem_userId_fkey")
+
+  @@index([payrollRunId], map: "PayrollItem_payrollRunId_fkey")
+  @@index([userId], map: "PayrollItem_userId_fkey")
+}
+
+model payrollrun {
+  id                String            @id
+  organizationId    String
+  periodStart       DateTime
+  periodEnd         DateTime
+  status            payrollrun_status @default(PENDING)
+  totalAmount       Decimal?          @db.Decimal(12, 2)
+  currency          String            @default("EUR")
+  createdAt         DateTime          @default(now())
+  processedAt       DateTime?
+  paymentProviderId String?
+  payoutId          String?
+  createdById       String?
+  payrollitem       payrollitem[]
+  user              user?             @relation(fields: [createdById], references: [id], map: "PayrollRun_createdById_fkey")
+  organization      organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "PayrollRun_organizationId_fkey")
+  paymentprovider   paymentprovider?  @relation(fields: [paymentProviderId], references: [id], map: "PayrollRun_paymentProviderId_fkey")
+
+  @@index([createdById], map: "PayrollRun_createdById_fkey")
+  @@index([organizationId], map: "PayrollRun_organizationId_fkey")
+  @@index([paymentProviderId], map: "PayrollRun_paymentProviderId_fkey")
+}
+
+model project {
+  id             String       @id
+  name           String
+  description    String?
+  organizationId String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime
+  organization   organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "Project_organizationId_fkey")
+  timeentry      timeentry[]
+
+  @@index([organizationId], map: "Project_organizationId_fkey")
+}
+
+model refreshtoken {
+  id           String   @id
+  userId       String
+  refreshToken String   @unique(map: "RefreshToken_refreshToken_key") @db.VarChar(1024)
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime
+  user         user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "RefreshToken_userId_fkey")
+
+  @@index([userId], map: "RefreshToken_userId_fkey")
+}
+
+model shift {
+  id             String       @id
+  userId         String
+  organizationId String
+  startTime      DateTime
+  endTime        DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime
+  clockin        clockin[]
+  organization   organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "Shift_organizationId_fkey")
+  user           user         @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Shift_userId_fkey")
+
+  @@index([organizationId], map: "Shift_organizationId_fkey")
+  @@index([userId], map: "Shift_userId_fkey")
+}
+
+model timeentry {
+  id             String          @id
+  userId         String
+  projectId      String?
+  organizationId String
+  startTime      DateTime
+  endTime        DateTime?
+  duration       Int?
+  description    String?
+  adhoc          Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  organization   organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "TimeEntry_organizationId_fkey")
+  project        project?        @relation(fields: [projectId], references: [id], map: "TimeEntry_projectId_fkey")
+  user           user            @relation(fields: [userId], references: [id], onDelete: Cascade, map: "TimeEntry_userId_fkey")
+  timesheetitem  timesheetitem[]
+
+  @@index([organizationId], map: "TimeEntry_organizationId_fkey")
+  @@index([projectId], map: "TimeEntry_projectId_fkey")
+  @@index([userId], map: "TimeEntry_userId_fkey")
+}
+
+model timesheet {
+  id                                String          @id
+  organizationId                    String
+  userId                            String
+  periodStart                       DateTime
+  periodEnd                         DateTime
+  totalSeconds                      Int             @default(0)
+  approved                          Boolean         @default(false)
+  approvedById                      String?
+  approvedAt                        DateTime?
+  createdAt                         DateTime        @default(now())
+  updatedAt                         DateTime
+  payrollitem                       payrollitem?
+  user_timesheet_approvedByIdTouser user?           @relation("timesheet_approvedByIdTouser", fields: [approvedById], references: [id], map: "Timesheet_approvedById_fkey")
+  organization                      organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "Timesheet_organizationId_fkey")
+  user_timesheet_userIdTouser       user            @relation("timesheet_userIdTouser", fields: [userId], references: [id], onDelete: Cascade, map: "Timesheet_userId_fkey")
+  timesheetitem                     timesheetitem[]
+
+  @@index([approvedById], map: "Timesheet_approvedById_fkey")
+  @@index([organizationId], map: "Timesheet_organizationId_fkey")
+  @@index([userId], map: "Timesheet_userId_fkey")
+}
+
+model timesheetitem {
+  id          String    @id
+  timesheetId String
+  timeEntryId String
+  seconds     Int
+  createdAt   DateTime  @default(now())
+  timeentry   timeentry @relation(fields: [timeEntryId], references: [id], onDelete: Cascade, map: "TimesheetItem_timeEntryId_fkey")
+  timesheet   timesheet @relation(fields: [timesheetId], references: [id], onDelete: Cascade, map: "TimesheetItem_timesheetId_fkey")
+
+  @@index([timeEntryId], map: "TimesheetItem_timeEntryId_fkey")
+  @@index([timesheetId], map: "TimesheetItem_timesheetId_fkey")
+}
+
+model user {
+  id                                     String                   @id
+  username                               String                   @unique(map: "User_username_key")
+  email                                  String                   @unique(map: "User_email_key")
+  password                               String
+  role                                   user_role                @default(EMPLOYEE)
+  createdAt                              DateTime                 @default(now())
+  updatedAt                              DateTime
+  organizationId                         String?
+  auditlog                               auditlog[]
+  exportjob                              exportjob[]
+  organizationinvitation                 organizationinvitation[]
+  paymentmethod                          paymentmethod[]
+  payrollitem                            payrollitem[]
+  payrollrun                             payrollrun[]
+  refreshtoken                           refreshtoken[]
+  shift                                  shift[]
+  timeentry                              timeentry[]
+  timesheet_timesheet_approvedByIdTouser timesheet[]              @relation("timesheet_approvedByIdTouser")
+  timesheet_timesheet_userIdTouser       timesheet[]              @relation("timesheet_userIdTouser")
+  organization                           organization?            @relation(fields: [organizationId], references: [id], map: "User_organizationId_fkey")
+  userpreferences                        userpreferences?
+
+  @@index([organizationId], map: "User_organizationId_fkey")
+}
+
+model userpreferences {
+  id            String   @id
+  userId        String   @unique(map: "UserPreferences_userId_key")
+  language      String   @default("fr")
+  darkMode      Boolean  @default(false)
+  notifications Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime
+  user          user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "UserPreferences_userId_fkey")
+}
+
+model webhookevent {
+  id             String        @id
+  organizationId String?
+  provider       String
+  eventType      String
+  payloadJson    String
+  receivedAt     DateTime      @default(now())
+  processed      Boolean       @default(false)
+  organization   organization? @relation(fields: [organizationId], references: [id], map: "WebhookEvent_organizationId_fkey")
+
+  @@index([organizationId], map: "WebhookEvent_organizationId_fkey")
+}
+
+enum organizationinvitation_role {
   ADMIN
   MANAGER
   EMPLOYEE
 }
 
-enum PlanTier {
-  FREE
-  PRO
-  ENTERPRISE
+enum paymentprovider_type {
+  STRIPE
+  PAYPAL
+  MANUAL
 }
 
-enum SubscriptionStatus {
-  ACTIVE
-  INACTIVE
-  CANCELED
-  TRIAL
-}
-
-enum InvitationStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
-  EXPIRED
-}
-
-enum ExportFormat {
+enum exportjob_format {
   CSV
   PDF
 }
 
-enum ExportStatus {
+enum exportjob_status {
   PENDING
   PROCESSING
   COMPLETED
   FAILED
 }
 
-enum PayrollStatus {
+enum organizationinvitation_status {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum payrollrun_status {
   PENDING
   PROCESSING
   COMPLETED
@@ -57,358 +394,8 @@ enum PayrollStatus {
   PAID
 }
 
-enum PaymentProviderType {
-  STRIPE
-  PAYPAL
-  MANUAL
-}
-
-/////////////////////////////////////////////////
-// CORE / AUTH
-/////////////////////////////////////////////////
-
-model Organization {
-  id             String                @id @default(uuid())
-  name           String
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
-
-  users          User[]
-  projects       Project[]
-  shifts         Shift[]
-  timeEntries    TimeEntry[]
-  settings       OrganizationSettings?
-  invitations    OrganizationInvitation[]
-  payrollRuns    PayrollRun[]
-  exportJobs     ExportJob[]
-  Timesheet Timesheet[]
-  PaymentMethod PaymentMethod[]
-  AuditLog AuditLog[]
-  WebhookEvent WebhookEvent[]
-  PaymentProvider PaymentProvider[]
-  Payout Payout[]
-}
-
-model User {
-  id              String            @id @default(uuid())
-  username        String            @unique
-  email           String            @unique
-  password        String
-  role            UserRole          @default(EMPLOYEE)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-
-  organizationId  String?
-  organization    Organization?     @relation(fields: [organizationId], references: [id])
-
-  refreshTokens   RefreshToken[]
-  timeEntries     TimeEntry[]
-  shifts          Shift[]
-  preferences     UserPreferences?
-  payrollItems    PayrollItem[]
-  paymentMethods  PaymentMethod[]
-
-  // Relations
-  timesheets      Timesheet[]               // regular timesheets of the user
-  approvedSheets  Timesheet[] @relation("Approver") // timesheets approved by this user
-
-  exportJobs      ExportJob[]
-  invitations     OrganizationInvitation[]
-  auditLogs       AuditLog[]
-  createdPayrolls PayrollRun[] @relation("PayrollCreator")
-}
-
-
-model RefreshToken {
-  id           String   @id @default(uuid())
-  userId       String
-  refreshToken String   @unique @db.VarChar(1024)
-  createdAt    DateTime @default(now())
-  expiresAt    DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-/////////////////////////////////////////////////
-// TIME TRACKING
-/////////////////////////////////////////////////
-
-model Project {
-  id             String       @id @default(uuid())
-  name           String
-  description    String?
-  organizationId String
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  timeEntries    TimeEntry[]
-}
-
-model Shift {
-  id             String       @id @default(uuid())
-  userId         String
-  organizationId String
-  startTime      DateTime
-  endTime        DateTime?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  clockIns       ClockIn[]
-}
-
-model ClockIn {
-  id          String   @id @default(uuid())
-  shiftId     String
-  clockInAt   DateTime @default(now())
-  clockOutAt  DateTime?
-  method      String?  // GPS | NFC | MANUAL | QR
-  latitude    Float?
-  longitude   Float?
-  ipAddress   String?
-  geoCountry  String?
-  geoCity     String?
-  device      String?
-  createdAt   DateTime @default(now())
-
-  shift       Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
-}
-
-model TimeEntry {
-  id             String   @id @default(uuid())
-  userId         String
-  projectId      String?
-  organizationId String
-  startTime      DateTime
-  endTime        DateTime?
-  duration       Int?     // in seconds
-  description    String?
-  adhoc          Boolean  @default(false)
-  createdAt      DateTime @default(now())
-
-  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  project        Project?       @relation(fields: [projectId], references: [id])
-  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  // relation to aggregated timesheet entries
-  timesheetItems TimesheetItem[]
-}
-
-/////////////////////////////////////////////////
-// TIMESHEETS & AGGREGATION
-/////////////////////////////////////////////////
-
-model Timesheet {
-  id             String     @id @default(uuid())
-  organizationId String
-  userId         String
-  periodStart    DateTime   // beginning of period (e.g. 2025-10-01)
-  periodEnd      DateTime   // end of period (e.g. 2025-10-31)
-  totalSeconds   Int        @default(0)
-  approved       Boolean    @default(false)
-  approvedById   String?
-  approvedAt     DateTime?
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  approvedBy     User?        @relation("Approver", fields: [approvedById], references: [id])
-  items          TimesheetItem[]
-  payrollItem    PayrollItem?
-}
-
-model TimesheetItem {
-  id           String    @id @default(uuid())
-  timesheetId  String
-  timeEntryId  String
-  seconds      Int
-  createdAt    DateTime  @default(now())
-
-  timesheet    Timesheet @relation(fields: [timesheetId], references: [id], onDelete: Cascade)
-  timeEntry    TimeEntry @relation(fields: [timeEntryId], references: [id], onDelete: Cascade)
-}
-
-/////////////////////////////////////////////////
-// PAYROLL / PAYMENTS
-/////////////////////////////////////////////////
-
-model PayrollRun {
-  id              String        @id @default(uuid())
-  organizationId  String
-  periodStart     DateTime
-  periodEnd       DateTime
-  status          PayrollStatus @default(PENDING)
-  totalAmount     Decimal?      @db.Decimal(12,2)
-  currency        String        @default("EUR")
-  createdAt       DateTime      @default(now())
-  processedAt     DateTime?
-  paymentProvider PaymentProvider? @relation(fields: [paymentProviderId], references: [id])
-  paymentProviderId String?
-  payoutId        String?       // reference to Payout if used
-  payrollItems    PayrollItem[]
-  createdById     String?
-  createdBy       User?         @relation("PayrollCreator", fields: [createdById], references: [id])
-  organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-}
-
-model PayrollItem {
-  id            String    @id @default(uuid())
-  payrollRunId  String?
-  timesheetId   String? @unique
-  userId        String
-  grossAmount   Decimal   @db.Decimal(12,2)
-  taxAmount     Decimal?  @db.Decimal(12,2)
-  netAmount     Decimal   @db.Decimal(12,2)
-  currency      String    @default("EUR")
-  createdAt     DateTime  @default(now())
-
-  payrollRun    PayrollRun? @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
-  timesheet     Timesheet?  @relation(fields: [timesheetId], references: [id])
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model PaymentProvider {
-  id          String               @id @default(uuid())
-  organizationId String
-  type        PaymentProviderType
-  configJson  String               // encrypted JSON with provider keys / config
-  createdAt   DateTime             @default(now())
-  organization Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  payouts     Payout[]
-  payrollRuns PayrollRun[]
-}
-
-model Payout {
-  id               String    @id @default(uuid())
-  organizationId   String
-  providerId       String
-  providerPayoutId String?   // id returned by provider
-  amount           Decimal   @db.Decimal(12,2)
-  currency         String    @default("EUR")
-  status           String    // PENDING, SENT, FAILED
-  createdAt        DateTime  @default(now())
-  processedAt      DateTime?
-  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  provider         PaymentProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
-}
-
-model PaymentMethod {
-  id            String   @id @default(uuid())
-  userId        String?
-  organizationId String?
-  provider      String
-  providerMethodId String
-  label         String?
-  createdAt     DateTime @default(now())
-
-  user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-}
-
-/////////////////////////////////////////////////
-// EXPORTS / FILES
-/////////////////////////////////////////////////
-
-model ExportJob {
-  id              String       @id @default(uuid())
-  organizationId  String
-  requestedById   String?
-  format          ExportFormat
-  status          ExportStatus  @default(PENDING)
-  filtersJson     String?        // filters used for export (dates, users, projects)
-  fileId          String?        @unique // generated file ref @unique @unique @unique @unique @unique
-  createdAt       DateTime       @default(now())
-  completedAt     DateTime?
-  errorMessage    String?
-
-  organization    Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  requestedBy     User?          @relation(fields: [requestedById], references: [id])
-  exportFile      ExportFile?    @relation(fields: [fileId], references: [id])
-}
-
-model ExportFile {
-  id          String   @id @default(uuid())
-  storageKey  String   @unique  // S3 key or local path
-  mimeType    String
-  size        Int?
-  createdAt   DateTime @default(now())
-  downloadUrl String?  // temporary signed URL if stored remotely
-  exportJob   ExportJob?
-}
-
-/////////////////////////////////////////////////
-// INVITES, SETTINGS, PREFERENCES
-/////////////////////////////////////////////////
-
-model OrganizationInvitation {
-  id              String            @id @default(uuid())
-  email           String
-  role            UserRole          @default(EMPLOYEE)
-  token           String            @unique
-  status          InvitationStatus  @default(PENDING)
-  organizationId  String
-  invitedById     String?
-  createdAt       DateTime          @default(now())
-  expiresAt       DateTime
-  acceptedAt      DateTime?
-  organization    Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  invitedBy       User?             @relation(fields: [invitedById], references: [id])
-}
-
-model OrganizationSettings {
-  id                String   @id @default(uuid())
-  organizationId    String   @unique
-  timezone          String   @default("Europe/Paris")
-  weekStartDay      Int      @default(1) // Monday
-  requireGeo        Boolean  @default(false)
-  requireDeviceLock Boolean  @default(false)
-  minimumClockSeconds Int?   // e.g. minimum allowed clock-in duration in seconds, null = none
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-}
-
-model UserPreferences {
-  id             String   @id @default(uuid())
-  userId         String   @unique
-  language       String   @default("fr")
-  darkMode       Boolean  @default(false)
-  notifications  Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-/////////////////////////////////////////////////
-// AUDIT & WEBHOOKS
-/////////////////////////////////////////////////
-
-model AuditLog {
-  id          String   @id @default(uuid())
-  organizationId String?
-  userId      String?
-  action      String   // e.g. "CLOCK_IN", "TIMESHEET_APPROVED", "PAYROLL_RUN"
-  resource    String?  // optional resource id
-  description String?
-  metaJson    String?
-  createdAt   DateTime @default(now())
-
-  organization Organization? @relation(fields: [organizationId], references: [id])
-  user         User?         @relation(fields: [userId], references: [id])
-}
-
-model WebhookEvent {
-  id            String   @id @default(uuid())
-  organizationId String?
-  provider      String
-  eventType     String
-  payloadJson   String
-  receivedAt    DateTime @default(now())
-  processed     Boolean  @default(false)
-
-  organization  Organization? @relation(fields: [organizationId], references: [id])
+enum user_role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
 }
