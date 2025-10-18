@@ -19,7 +19,7 @@ docker run -d \
 echo "Waiting for new container to be ready..."
 for i in {1..20}; do
   if curl -fs http://localhost:$NEW_PORT >/dev/null 2>&1; then
-    echo "✅ New container is healthy!"
+    echo "New container is healthy!"
     break
   fi
   echo "Waiting ($i/20)..."
