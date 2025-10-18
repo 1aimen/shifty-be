@@ -1,108 +1,55 @@
-\documentclass{article}
-
+\documentclass[a4paper,12pt]{article}
+\usepackage[table]{xcolor}
+\usepackage{geometry}
 \usepackage{xltabular}
+\usepackage{array}
 
-\title{A longtable + tabularx example, using xltabular}
+% Reduce left margin slightly to move table left
+\geometry{left=0.3in, right=1in, top=1in, bottom=1in}
+
+\title{Employee Attendance Log}
+\date{}
+
+\definecolor{lightgray}{gray}{0.9}
+\definecolor{summarygray}{gray}{0.8}
 
 \begin{document}
+\maketitle
+\small % smaller font to fit table
 
-\begin{xltabular}{\textwidth}{|l|X|X|}
-\caption{A sample long table.} \label{tab:long} \\
+\begin{xltabular}{\textwidth}{|
+>{\raggedright\arraybackslash}p{2cm} | % Employee ID
+>{\raggedright\arraybackslash}p{4cm} | % Name
+>{\centering\arraybackslash}p{2cm} | % Date
+>{\centering\arraybackslash}p{2cm} | % Shift
+>{\centering\arraybackslash}p{2cm} | % Clock-In
+>{\centering\arraybackslash}p{2cm} | % Clock-Out
+>{\centering\arraybackslash}p{2cm} | % Method
+}
 
-\hline \multicolumn{1}{|c|}{\textbf{First column}} & \multicolumn{1}{c|}{\textbf{Second column}} & \multicolumn{1}{c|}{\textbf{Third column}} \\ \hline 
+\caption{Employee Clock-In / Clock-Out Times} \label{tab:attendance} \\
+
+\hline
+\textbf{Employee ID} & \textbf{Name} & \textbf{Date} & \textbf{Shift} & \textbf{Clock-In} & \textbf{Clock-Out} & \textbf{Method} \\ \hline
 \endfirsthead
 
-\multicolumn{3}{c}%
-{\tablename\ \thetable{} -- continued from previous page} \\
-\hline \multicolumn{1}{|c|}{\textbf{First column}} & \multicolumn{1}{c|}{\textbf{Second column}} & \multicolumn{1}{c|}{\textbf{Third column}} \\ \hline 
+\multicolumn{7}{c}{\tablename\ \thetable{} -- continued from previous page} \\ \hline
+\textbf{Employee ID} & \textbf{Name} & \textbf{Date} & \textbf{Shift} & \textbf{Clock-In} & \textbf{Clock-Out} & \textbf{Method} \\ \hline
 \endhead
 
-\hline \multicolumn{3}{|r|}{{Continued on next page}} \\ \hline
+\hline \multicolumn{7}{|r|}{{Continued on next page}} \\ \hline
 \endfoot
 
 \hline
 \endlastfoot
 
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
-One & abcdef ghjijklmn & 123.456778 \\
+\rowcolor{lightgray} 487857da-8edb-4107 & Aimen Bennacer & 2025-10-18 & Morning & 08:00 & 16:00 & GPS \\
+8d327b9b-8593-433b & Aimen Bennacer & 2025-10-18 & Morning & 08:15 & 16:05 & QR \\
+\rowcolor{lightgray} 487857da-8edb-4107 & Aimen Bennacer & 2025-10-19 & Morning & 08:05 & 16:10 & NFC \\
+8d327b9b-8593-433b & Aimen Bennacer & 2025-10-19 & Morning & 08:00 & 16:00 & GPS \\
+
+\rowcolor{summarygray} \multicolumn{4}{|r|}{\textbf{Total Hours}} & \multicolumn{3}{l|}{31h 20m} \\
+
 \end{xltabular}
 
 \end{document}
