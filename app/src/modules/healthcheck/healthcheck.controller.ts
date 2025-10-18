@@ -11,7 +11,7 @@ import { logger } from "../../utils/logger.utils";
 
 /**
  * @swagger
- * /healthcheck:
+ * /api/v1/healthcheck:
  *   get:
  *     summary: Get server health status
  *     tags: [Healthcheck]

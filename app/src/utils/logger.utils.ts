@@ -45,22 +45,29 @@ const myFormat = printf(({ level, message, timestamp }) => {
   return `${timestamp} [${level}]: ${message}`;
 });
 
+import path from "path";
+
+const logDir = path.resolve(__dirname, "../../../logs");
+
 export const logger = createLogger({
-  level: "info", // minimum level to log
+  level: "info",
   format: combine(
-    colorize(), // adds colors for console
+    colorize(),
     timestamp({ format: "DD/MM/YYYY HH:mm:ss" }),
     myFormat
   ),
   transports: [
-    new transports.Console(), // logs to console
-    new transports.File({ filename: "error.log", level: "error" }), // errors to file
-    new transports.File({ filename: "combined.log" }), // all logs to file
+    new transports.Console(),
+    new transports.File({
+      filename: path.join(logDir, "error.log"),
+      level: "error",
+    }),
+    new transports.File({ filename: path.join(logDir, "combined.log") }),
   ],
   exceptionHandlers: [
-    new transports.File({ filename: "exceptions.log" }), // uncaught exceptions
+    new transports.File({ filename: path.join(logDir, "exceptions.log") }),
   ],
   rejectionHandlers: [
-    new transports.File({ filename: "rejections.log" }), // unhandled promise rejections
+    new transports.File({ filename: path.join(logDir, "rejections.log") }),
   ],
 });
