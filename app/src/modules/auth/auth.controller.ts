@@ -12,7 +12,7 @@ import { logger } from "../../utils/logger.utils";
 
 /**
  * @swagger
- * /auth/register:
+ * /api/v1/auth/register:
  *   post:
  *     summary: Register a new user
  *     tags: [Auth]
@@ -71,7 +71,7 @@ export const registerController = async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * /auth/login:
+ * /api/v1/auth/login:
  *   post:
  *     summary: Login user
  *     tags: [Auth]

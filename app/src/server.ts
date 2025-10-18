@@ -28,7 +28,7 @@ const options = {
 
     servers: [
       {
-        url: `http://localhost:${config.port}/${API_VERSION}`,
+        url: `http://localhost:${config.port}`,
       },
     ],
   },
