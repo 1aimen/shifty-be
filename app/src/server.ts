@@ -1,7 +1,7 @@
 import express from "express";
 import router from "./routes/index";
 import { config } from "./config/index";
-import { errorHandler } from "./middlewares/errors.middleware";
+import { errorMiddleware } from "./middlewares/errors.middleware";
 import { logger } from "./utils/logger.utils";
 const bodyParser = require("body-parser");
 const swaggerUi = require("swagger-ui-express");
@@ -11,8 +11,7 @@ const API_VERSION = config.api_version;
 const app = express();
 app.use(express.json());
 app.use("/", router);
-app.use(errorHandler);
-
+app.use(errorMiddleware);
 const options = {
   definition: {
     openapi: "3.1.0",
@@ -25,7 +24,15 @@ const options = {
         email: "info@email.com",
       },
     },
-
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
     servers: [
       {
         url: `http://localhost:${config.port}`,

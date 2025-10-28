@@ -10,4 +10,4 @@ export type PayrollStatus =
   | "COMPLETED"
   | "FAILED"
   | "PAID";
-export type PaymentProviderType = "STRIPE" | "PAYPAL" | "MANUAL";
+export type PaymentProviderType = "STRIPE" | "OTHER";
