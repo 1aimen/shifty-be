@@ -4,8 +4,10 @@ import {
   UpdateOrganizationDTO,
 } from "./organization.dto";
 import { prisma } from "../../utils/prisma.utils";
-import { AppError } from "../../middlewares/errors.middleware";
+import { appLogger } from "../../utils/applogger.utils";
+import { AppError } from "../../middlewares/error.middleware";
 
+const logger = appLogger("OrganizationService");
 export class OrganizationService {
   // ─── Create organization (only admin) ───
   static async createOrganization(userId: string, data: CreateOrganizationDTO) {
@@ -48,7 +50,14 @@ export class OrganizationService {
         project: true,
         organizationinvitation: true,
         organizationsettings: true,
-        user: true,
+        user: {
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            role: true,
+          },
+        },
       },
     });
     if (!org) throw new AppError("Organization not found", 404);

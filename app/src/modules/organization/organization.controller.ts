@@ -1,7 +1,6 @@
 // src/modules/organization/organization.controller.ts
 import { Request, Response } from "express";
 import { OrganizationService } from "./organization.service";
-import { logger } from "../../utils/logger.utils";
 import { AuthRequest } from "../../types/auth.types";
 /**
  * @swagger
@@ -60,7 +59,6 @@ export const createOrganizationController = async (
       userId,
       req.body
     );
-    logger.info(`${res.statusCode} ${req.method} ${req.url}`);
     return res.status(201).json(result);
   } catch (err: any) {
     return res.status(400).json({ message: err.message });
@@ -93,7 +91,6 @@ export const getOrganizationController = async (
   try {
     const { orgId } = req.params;
     const result = await OrganizationService.getOrganization(orgId!);
-    logger.info(`${res.statusCode} ${req.method} ${req.url}`);
     return res.status(200).json(result);
   } catch (err: any) {
     return res.status(404).json({ message: err.message });
@@ -146,7 +143,6 @@ export const updateOrganizationController = async (
       orgId!,
       req.body
     );
-    logger.info(`${res.statusCode} ${req.method} ${req.url}`);
     return res.status(200).json(result);
   } catch (err: any) {
     return res.status(400).json({ message: err.message });
@@ -186,7 +182,6 @@ export const deleteOrganizationController = async (
 
     const { orgId } = req.params;
     const result = await OrganizationService.deleteOrganization(orgId!, userId);
-    logger.info(`${res.statusCode} ${req.method} ${req.url}`);
     return res.status(200).json(result);
   } catch (err: any) {
     return res.status(404).json({ message: err.message });

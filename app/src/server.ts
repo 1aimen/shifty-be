@@ -1,15 +1,18 @@
 import express from "express";
 import router from "./routes/index";
 import { config } from "./config/index";
-import { errorMiddleware } from "./middlewares/errors.middleware";
-import { logger } from "./utils/logger.utils";
+import { logRequests } from "./middlewares/requestlogger.middleware";
+import { appLogger } from "./utils/applogger.utils";
+import { errorMiddleware } from "./middlewares/error.middleware";
 const bodyParser = require("body-parser");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
 const API_VERSION = config.api_version;
+const logger = appLogger("Application");
 
 const app = express();
 app.use(express.json());
+app.use(logRequests);
 app.use("/", router);
 app.use(errorMiddleware);
 const options = {
@@ -47,6 +50,7 @@ const specs = swaggerJsdoc(options);
 export const setupSwagger = (app: express.Application) => {
   app.use(`/${API_VERSION}/docs`, swaggerUi.serve, swaggerUi.setup(specs));
 };
+app.use(errorMiddleware);
 setupSwagger(app);
 
 app.listen(config.port, () => {

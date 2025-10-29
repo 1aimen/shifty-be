@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { AuthRequest } from "../types/auth.types";
 import { prisma } from "../utils/prisma.utils";
+import { config } from "../config";
 
 interface CustomJwtPayload extends JwtPayload {
   userId: string;
@@ -21,7 +22,7 @@ export const authMiddleware = async (
   const token = authHeader.split(" ")[1];
 
   try {
-    const secret = process.env.JWT_SECRET!;
+    const secret = config.jwt_secret;
     if (!secret) throw new Error("JWT_SECRET not defined");
 
     const decoded = jwt.verify(token!, secret) as CustomJwtPayload;
