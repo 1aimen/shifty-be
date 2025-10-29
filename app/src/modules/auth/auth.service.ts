@@ -13,7 +13,9 @@ import {
 } from "../../utils/auth.utils";
 import { prisma } from "../../utils/prisma.utils";
 import { UserRole } from "../../models/enums";
+import { moduleLogger } from "../../utils/modulelogger.utils";
 
+const log = moduleLogger("AuthModule");
 export class AuthService {
   static async register(
     data: RegisterRequestDTO
@@ -22,7 +24,7 @@ export class AuthService {
     const now = new Date();
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) throw new Error("Email already in use");
-
+    log.error("Email already in use");
     const hashed = await hashPassword(password);
     const user = await prisma.user.create({
       data: {
@@ -62,9 +64,11 @@ export class AuthService {
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) throw new Error("Invalid credentials");
+    log.error("Invalid credentials");
 
     const valid = await comparePasswords(password, user.password);
     if (!valid) throw new Error("Invalid credentials");
+    log.error("Invalid credentials");
 
     const accessToken = generateAccessToken({ userId: user.id });
     const refreshToken = generateRefreshToken({ userId: user.id });

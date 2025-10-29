@@ -14,6 +14,13 @@ import {
 } from "../modules/organization/organization.controller";
 import { authMiddleware } from "../middlewares/authentication.middleware";
 import { authorize } from "../middlewares/authorization.middleware";
+import {
+  createProjectController,
+  deleteProjectController,
+  getProjectController,
+  listProjectsController,
+  updateProjectController,
+} from "../modules/project/project.controller";
 
 const API_VERSION = config.api_version;
 const router = Router();
@@ -67,6 +74,37 @@ router.delete(
   authMiddleware,
   authorize("ADMIN"),
   deleteOrganizationController
+);
+
+// projects
+
+// Projects under organization
+router.post(
+  "/organizations/:orgId/projects",
+  authMiddleware,
+  authorize("ADMIN"),
+  createProjectController
+);
+router.get("/organizations/:orgId/projects", listProjectsController);
+
+// Project-specific operations
+router.get(
+  "/projects/:projectId",
+  authMiddleware,
+  authorize("ADMIN"),
+  getProjectController
+);
+router.put(
+  "/projects/:projectId",
+  authMiddleware,
+  authorize("ADMIN"),
+  updateProjectController
+);
+router.delete(
+  "/projects/:projectId",
+  authMiddleware,
+  authorize("ADMIN"),
+  deleteProjectController
 );
 
 // users
