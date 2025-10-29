@@ -4,10 +4,10 @@ import {
   UpdateOrganizationDTO,
 } from "./organization.dto";
 import { prisma } from "../../utils/prisma.utils";
-import { appLogger } from "../../utils/applogger.utils";
 import { AppError } from "../../middlewares/error.middleware";
+import { moduleLogger } from "../../utils/modulelogger.utils";
 
-const logger = appLogger("OrganizationService");
+const logger = moduleLogger("OrganizationService");
 export class OrganizationService {
   // ─── Create organization (only admin) ───
   static async createOrganization(userId: string, data: CreateOrganizationDTO) {

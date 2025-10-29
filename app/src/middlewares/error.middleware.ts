@@ -1,10 +1,6 @@
-// src/middlewares/error.middleware.ts
 import { Request, Response, NextFunction } from "express";
-import { appLogger } from "../utils/applogger.utils";
+import { logger } from "../utils/logger.utils";
 
-const logger = appLogger("ErrorMiddleware");
-
-// Custom AppError class
 export class AppError extends Error {
   statusCode: number;
   isOperational: boolean;
@@ -17,7 +13,6 @@ export class AppError extends Error {
   }
 }
 
-// Express error middleware
 export const errorMiddleware = (
   err: Error | AppError,
   req: Request,
@@ -27,9 +22,17 @@ export const errorMiddleware = (
   const statusCode = (err as AppError).statusCode || 500;
   const isOperational = (err as AppError).isOperational ?? false;
 
-  logger.error(
-    `[${req.method} ${req.originalUrl}] ${statusCode} : ${err.message}\n${err.stack}`
-  );
+  // Operational errors go to error.log (also combined.log)
+  if (isOperational) {
+    logger.error(
+      `[${req.method} ${req.originalUrl}] ${statusCode} : ${err.message}`
+    );
+  } else {
+    // Internal errors (stack trace) go to exceptions.log
+    logger.error(
+      `[${req.method} ${req.originalUrl}] ${statusCode} : ${err.message}\n${err.stack}`
+    );
+  }
 
   res.status(statusCode).json({
     status: "error",

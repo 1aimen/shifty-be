@@ -2,13 +2,12 @@ import express from "express";
 import router from "./routes/index";
 import { config } from "./config/index";
 import { logRequests } from "./middlewares/requestlogger.middleware";
-import { appLogger } from "./utils/applogger.utils";
+import { logger } from "./utils/logger.utils";
 import { errorMiddleware } from "./middlewares/error.middleware";
 const bodyParser = require("body-parser");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
 const API_VERSION = config.api_version;
-const logger = appLogger("Application");
 
 const app = express();
 app.use(express.json());
@@ -53,9 +52,40 @@ export const setupSwagger = (app: express.Application) => {
 app.use(errorMiddleware);
 setupSwagger(app);
 
-app.listen(config.port, () => {
+const server = app.listen(config.port, () => {
   logger.info(`Server running on http://localhost:${config.port}`);
   logger.info(
     `Swagger docs at http://localhost:${config.port}/${config.api_version}/docs`
   );
 });
+
+setTimeout(() => {
+  Promise.reject("💥 Forced unhandled rejection for testing");
+}, 1500);
+
+process.on("uncaughtException", (err: Error) => {
+  logger.error(`Uncaught Exception: ${err.message}\n${err.stack}`);
+  gracefulShutdown();
+});
+
+process.on("unhandledRejection", (reason: any) => {
+  const msg =
+    reason instanceof Error
+      ? `${reason.message}\n${reason.stack}`
+      : String(reason);
+  logger.error(`Unhandled Rejection: ${msg}`);
+  gracefulShutdown();
+});
+
+function gracefulShutdown() {
+  logger.warn("Shutting down server gracefully...");
+  server.close(() => {
+    logger.info("Server closed.");
+    process.exit(1);
+  });
+
+  setTimeout(() => {
+    logger.error("Force shutdown.");
+    process.exit(1);
+  }, 5000);
+}
