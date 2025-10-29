@@ -6,6 +6,14 @@ import {
   loginController,
   registerController,
 } from "../modules/auth/auth.controller";
+import {
+  createOrganizationController,
+  deleteOrganizationController,
+  getOrganizationController,
+  updateOrganizationController,
+} from "../modules/organization/organization.controller";
+import { authMiddleware } from "../middlewares/authentication.middleware";
+import { authorize } from "../middlewares/authorization.middleware";
 
 const API_VERSION = config.api_version;
 const router = Router();
@@ -20,6 +28,47 @@ router.use(authRoutes);
 // authorization
 // admin
 // organization
+/**
+ * Create a new organization
+ * POST /api/v1/organizations
+ */
+router.post(
+  "/api/v1/organizations",
+  authMiddleware,
+  authorize("ADMIN"), // pass allowed roles here
+  createOrganizationController
+);
+/**
+ * Get organization by ID
+ * GET /api/v1/organizations/:orgId
+ */
+router.get(
+  "/api/v1/organizations/:orgId",
+  authMiddleware,
+  authorize("ADMIN"),
+  getOrganizationController
+);
+/**
+ * Update organization by ID
+ * PUT /api/v1/organizations/:orgId
+ */
+router.put(
+  "/api/v1/organizations/:orgId",
+  authMiddleware,
+  authorize("ADMIN"),
+  updateOrganizationController
+);
+/**
+ * Delete organization by ID
+ * DELETE /api/v1/organizations/:orgId
+ */
+router.delete(
+  "/api/v1/organizations/:orgId",
+  authMiddleware,
+  authorize("ADMIN"),
+  deleteOrganizationController
+);
+
 // users
 // shifts
 // clock-in

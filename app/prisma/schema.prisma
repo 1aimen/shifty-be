@@ -8,7 +8,7 @@ datasource db {
 }
 
 model auditlog {
-  id             String        @id
+  id             String        @id @default(uuid()) 
   organizationId String?
   userId         String?
   action         String
@@ -24,7 +24,7 @@ model auditlog {
 }
 
 model clockin {
-  id         String    @id
+  id         String    @id @default(uuid()) 
   shiftId    String
   clockInAt  DateTime  @default(now())
   clockOutAt DateTime?
@@ -42,7 +42,7 @@ model clockin {
 }
 
 model exportfile {
-  id          String     @id
+  id          String     @id @default(uuid()) 
   storageKey  String     @unique(map: "ExportFile_storageKey_key")
   mimeType    String
   size        Int?
@@ -52,7 +52,7 @@ model exportfile {
 }
 
 model exportjob {
-  id             String           @id
+  id             String           @id @default(uuid()) 
   organizationId String
   requestedById  String?
   format         exportjob_format
@@ -71,7 +71,7 @@ model exportjob {
 }
 
 model organization {
-  id                     String                   @id
+  id                     String                   @id @default(uuid()) 
   name                   String
   createdAt              DateTime                 @default(now())
   updatedAt              DateTime
@@ -92,7 +92,7 @@ model organization {
 }
 
 model organizationinvitation {
-  id             String                        @id
+  id             String                        @id @default(uuid()) 
   email          String
   role           organizationinvitation_role   @default(EMPLOYEE)
   token          String                        @unique(map: "OrganizationInvitation_token_key")
@@ -110,7 +110,7 @@ model organizationinvitation {
 }
 
 model organizationsettings {
-  id                  String       @id
+  id                  String       @id @default(uuid()) 
   organizationId      String       @unique(map: "OrganizationSettings_organizationId_key")
   timezone            String       @default("Europe/Paris")
   weekStartDay        Int          @default(1)
@@ -123,7 +123,7 @@ model organizationsettings {
 }
 
 model paymentmethod {
-  id               String        @id
+  id               String        @id @default(uuid()) 
   userId           String?
   organizationId   String?
   provider         String
@@ -138,7 +138,7 @@ model paymentmethod {
 }
 
 model paymentprovider {
-  id             String               @id
+  id             String               @id @default(uuid()) 
   organizationId String
   type           paymentprovider_type
   configJson     String
@@ -151,7 +151,7 @@ model paymentprovider {
 }
 
 model payout {
-  id               String          @id
+  id               String          @id @default(uuid()) 
   organizationId   String
   providerId       String
   providerPayoutId String?
@@ -168,7 +168,7 @@ model payout {
 }
 
 model payrollitem {
-  id           String      @id
+  id           String      @id @default(uuid()) 
   payrollRunId String?
   timesheetId  String?     @unique(map: "PayrollItem_timesheetId_key")
   userId       String
@@ -186,7 +186,7 @@ model payrollitem {
 }
 
 model payrollrun {
-  id                String            @id
+  id                String            @id @default(uuid()) 
   organizationId    String
   periodStart       DateTime
   periodEnd         DateTime
@@ -209,7 +209,7 @@ model payrollrun {
 }
 
 model project {
-  id             String       @id
+  id             String       @id @default(uuid()) 
   name           String
   description    String?
   organizationId String
@@ -222,7 +222,7 @@ model project {
 }
 
 model refreshtoken {
-  id           String   @id
+  id           String   @id @default(uuid()) 
   userId       String
   refreshToken String   @unique(map: "RefreshToken_refreshToken_key") @db.VarChar(1024)
   createdAt    DateTime @default(now())
@@ -233,7 +233,7 @@ model refreshtoken {
 }
 
 model shift {
-  id             String       @id
+  id             String       @id @default(uuid()) 
   userId         String
   organizationId String
   startTime      DateTime
@@ -249,7 +249,7 @@ model shift {
 }
 
 model timeentry {
-  id             String          @id
+  id             String          @id @default(uuid()) 
   userId         String
   projectId      String?
   organizationId String
@@ -270,7 +270,7 @@ model timeentry {
 }
 
 model timesheet {
-  id                                String          @id
+  id                                String          @id @default(uuid()) 
   organizationId                    String
   userId                            String
   periodStart                       DateTime
@@ -293,7 +293,7 @@ model timesheet {
 }
 
 model timesheetitem {
-  id          String    @id
+  id          String    @id @default(uuid()) 
   timesheetId String
   timeEntryId String
   seconds     Int
@@ -306,11 +306,11 @@ model timesheetitem {
 }
 
 model user {
-  id                                     String                   @id
+  id                                     String                   @id @default(uuid()) 
   username                               String                   @unique(map: "User_username_key")
   email                                  String                   @unique(map: "User_email_key")
   password                               String
-  role                                   user_role                @default(EMPLOYEE)
+  role                                   user_role                @default(ADMIN)
   createdAt                              DateTime                 @default(now())
   updatedAt                              DateTime
   organizationId                         String?
@@ -332,7 +332,7 @@ model user {
 }
 
 model userpreferences {
-  id            String   @id
+  id            String   @id @default(uuid()) 
   userId        String   @unique(map: "UserPreferences_userId_key")
   language      String   @default("fr")
   darkMode      Boolean  @default(false)
@@ -343,7 +343,7 @@ model userpreferences {
 }
 
 model webhookevent {
-  id             String        @id
+  id             String        @id @default(uuid()) 
   organizationId String?
   provider       String
   eventType      String

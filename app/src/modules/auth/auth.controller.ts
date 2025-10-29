@@ -1,7 +1,6 @@
 // src/modules/auth/auth.controller.ts
 import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
-import { logger } from "../../utils/logger.utils";
 
 /**
  * @swagger
@@ -62,7 +61,6 @@ import { logger } from "../../utils/logger.utils";
 export const registerController = async (req: Request, res: Response) => {
   try {
     const result = await AuthService.register(req.body);
-    logger.info(`${res.statusCode} ${req.method} ${req.url} `);
     return res.status(201).json(result);
   } catch (err: any) {
     return res.status(400).json({ message: err.message });
@@ -115,7 +113,6 @@ export const registerController = async (req: Request, res: Response) => {
 export const loginController = async (req: Request, res: Response) => {
   try {
     const result = await AuthService.login(req.body);
-    logger.info(`${res.statusCode} ${req.method} ${req.url} `);
     return res.status(200).json(result);
   } catch (err: any) {
     return res.status(400).json({ message: err.message });
