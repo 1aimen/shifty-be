@@ -4,6 +4,7 @@ import { config } from "../config/index";
 import authRoutes from "../modules/auth/auth.route";
 import {
   loginController,
+  logoutController,
   registerController,
 } from "../modules/auth/auth.controller";
 import {
@@ -34,12 +35,13 @@ import {
   getUserPreferencesController,
   updateUserPreferencesController,
 } from "../modules/settings/settings.controller";
-import { updateUserRoleController } from "../modules/users/userrole.controller";
+import { updateUserRoleController } from "../modules/users/users.role.controller";
 import {
   getPasswordResetLinkController,
   resetPasswordController,
   sendPasswordResetLinkController,
 } from "../modules/auth/auth.reset-password.controller";
+import { getAllUsersController } from "../modules/organization/organization.users.controller";
 
 const API_VERSION = config.api_version;
 const router = Router();
@@ -48,7 +50,7 @@ const router = Router();
 router.get(`/${API_VERSION}/healthcheck`, healthCheckController);
 router.post("/api/v1/auth/register", registerController);
 router.post("/api/v1/auth/login", loginController);
-
+router.post("/api/v1/auth/logout", authMiddleware, logoutController);
 // authentication
 router.use(authRoutes);
 // authorization
@@ -93,6 +95,17 @@ router.delete(
   authMiddleware,
   authorize("ADMIN"),
   deleteOrganizationController
+);
+
+/**
+ * GET /api/v1/organizations/:orgId/users
+ * Only admins can access
+ */
+router.get(
+  "/api/v1/organizations/:orgId/users",
+  authMiddleware, // validates JWT & sets req.user
+  authorize("ADMIN"),
+  getAllUsersController
 );
 
 // organization settings

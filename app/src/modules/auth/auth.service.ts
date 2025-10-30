@@ -115,4 +115,13 @@ export class AuthService {
       refreshToken,
     };
   }
+
+  static async logout(userId: string) {
+    // Delete all refresh tokens for the user
+    await prisma.refreshtoken.deleteMany({
+      where: { userId },
+    });
+
+    return { message: "Logged out successfully" };
+  }
 }

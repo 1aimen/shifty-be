@@ -1,6 +1,7 @@
 // src/modules/auth/auth.controller.ts
 import { Request, Response } from "express";
 import { AuthService } from "./auth.service";
+import { AuthRequest } from "../../types/auth.types";
 
 /**
  * @swagger
@@ -113,6 +114,36 @@ export const registerController = async (req: Request, res: Response) => {
 export const loginController = async (req: Request, res: Response) => {
   try {
     const result = await AuthService.login(req.body);
+    return res.status(200).json(result);
+  } catch (err: any) {
+    return res.status(400).json({ message: err.message });
+  }
+};
+
+/**
+ * @swagger
+ * /api/v1/auth/logout:
+ *   post:
+ *     summary: Logout the current user
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ */
+export const logoutController = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+    const result = await AuthService.logout(req.user.id);
     return res.status(200).json(result);
   } catch (err: any) {
     return res.status(400).json({ message: err.message });
