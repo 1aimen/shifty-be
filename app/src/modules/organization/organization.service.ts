@@ -30,6 +30,17 @@ export class OrganizationService {
       },
     });
 
+    await prisma.organizationsettings.create({
+      data: {
+        organizationId: org.id,
+        timezone: "Europe/Paris",
+        weekStartDay: 1,
+        requireGeo: false,
+        requireDeviceLock: false,
+        minimumClockSeconds: null,
+        updatedAt: new Date(),
+      },
+    });
     return org;
   }
 

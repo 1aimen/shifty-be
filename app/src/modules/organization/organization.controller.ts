@@ -59,6 +59,7 @@ export const createOrganizationController = async (
       userId,
       req.body
     );
+
     return res.status(201).json(result);
   } catch (err: any) {
     return res.status(400).json({ message: err.message });
