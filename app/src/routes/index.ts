@@ -14,6 +14,18 @@ import {
 } from "../modules/organization/organization.controller";
 import { authMiddleware } from "../middlewares/authentication.middleware";
 import { authorize } from "../middlewares/authorization.middleware";
+import {
+  createProjectController,
+  deleteProjectController,
+  getProjectController,
+  listProjectsController,
+  updateProjectController,
+} from "../modules/project/project.controller";
+import { inviteUserToOrganizationController } from "../modules/organization/organization.invitation.controller";
+import {
+  getOrganizationSettingsController,
+  updateOrganizationSettingsController,
+} from "../modules/organization/organization.settings.controller";
 
 const API_VERSION = config.api_version;
 const router = Router();
@@ -69,7 +81,60 @@ router.delete(
   deleteOrganizationController
 );
 
+// organization settings
+
+router.get(
+  "/api/v1/organizations/:orgId/settings",
+  authMiddleware,
+  authorize("ADMIN"),
+  getOrganizationSettingsController
+);
+
+router.put(
+  "/api/v1/organizations/:orgId/settings",
+  authMiddleware,
+  authorize("ADMIN"),
+  updateOrganizationSettingsController
+);
+
+// projects
+
+// Projects under organization
+router.post(
+  "/api/v1/organizations/:orgId/projects",
+  authMiddleware,
+  authorize("ADMIN"),
+  createProjectController
+);
+router.get("/organizations/:orgId/projects", listProjectsController);
+
+// Project-specific operations
+router.get(
+  "/api/v1/projects/:projectId",
+  authMiddleware,
+  authorize("ADMIN"),
+  getProjectController
+);
+router.put(
+  "/api/v1/projects/:projectId",
+  authMiddleware,
+  authorize("ADMIN"),
+  updateProjectController
+);
+router.delete(
+  "/api/v1/projects/:projectId",
+  authMiddleware,
+  authorize("ADMIN"),
+  deleteProjectController
+);
+
 // users
+// POST /api/v1/organizations/:orgId/invite
+router.post(
+  "/api/v1/organizations/:orgId/invite",
+  authMiddleware,
+  inviteUserToOrganizationController
+);
 // shifts
 // clock-in
 // clock-out

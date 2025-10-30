@@ -59,10 +59,6 @@ const server = app.listen(config.port, () => {
   );
 });
 
-setTimeout(() => {
-  Promise.reject("💥 Forced unhandled rejection for testing");
-}, 1500);
-
 process.on("uncaughtException", (err: Error) => {
   logger.error(`Uncaught Exception: ${err.message}\n${err.stack}`);
   gracefulShutdown();
