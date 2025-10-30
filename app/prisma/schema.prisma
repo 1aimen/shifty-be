@@ -332,6 +332,7 @@ model user {
   userpreferences                        userpreferences?
 
   @@index([organizationId], map: "User_organizationId_fkey")
+  emailverificationtoken emailverificationtoken[] @relation(map: "EmailVerificationToken_userId_fkey")
 }
 
 model passwordresettoken {
@@ -341,6 +342,15 @@ model passwordresettoken {
   expiresAt  DateTime
   createdAt  DateTime @default(now())
  user       user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "PasswordResetToken_userId_fkey")
+}
+
+model emailverificationtoken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user       user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "EmailVerificationToken_userId_fkey")
 }
 
 model userpreferences {

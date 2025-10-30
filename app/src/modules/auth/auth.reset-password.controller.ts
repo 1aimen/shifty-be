@@ -15,6 +15,8 @@ import { userPasswordService } from "./auth.reset-password.service";
  *   post:
  *     summary: Admin sends a password reset link to a user
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: id
  *         in: path

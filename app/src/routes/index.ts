@@ -42,6 +42,10 @@ import {
   sendPasswordResetLinkController,
 } from "../modules/auth/auth.reset-password.controller";
 import { getAllUsersController } from "../modules/organization/organization.users.controller";
+import {
+  sendVerificationEmailController,
+  verifyEmailController,
+} from "../modules/auth/auth.email-verification.controller";
 
 const API_VERSION = config.api_version;
 const router = Router();
@@ -51,6 +55,12 @@ router.get(`/${API_VERSION}/healthcheck`, healthCheckController);
 router.post("/api/v1/auth/register", registerController);
 router.post("/api/v1/auth/login", loginController);
 router.post("/api/v1/auth/logout", authMiddleware, logoutController);
+router.post(
+  "/api/v1/auth/email-verification-request",
+  sendVerificationEmailController
+);
+router.post("/api/v1/auth/verify-email", verifyEmailController);
+
 // authentication
 router.use(authRoutes);
 // authorization
