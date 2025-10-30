@@ -26,6 +26,14 @@ import {
   getOrganizationSettingsController,
   updateOrganizationSettingsController,
 } from "../modules/organization/organization.settings.controller";
+import {
+  duplicateProjectController,
+  moveProjectController,
+} from "../modules/organization/organization.project.controller";
+import {
+  getUserPreferencesController,
+  updateUserPreferencesController,
+} from "../modules/settings/settings.controller";
 
 const API_VERSION = config.api_version;
 const router = Router();
@@ -106,7 +114,28 @@ router.post(
   authorize("ADMIN"),
   createProjectController
 );
-router.get("/organizations/:orgId/projects", listProjectsController);
+router.get(
+  "/organizations/:orgId/projects",
+  authMiddleware,
+  listProjectsController
+);
+
+/**
+ * Only ADMIN can duplicate or move projects
+ */
+router.post(
+  "/api/v1/projects/:projectId/duplicate",
+  authMiddleware,
+  authorize("ADMIN"),
+  duplicateProjectController
+);
+
+router.post(
+  "/api/v1/projects/:projectId/move",
+  authMiddleware,
+  authorize("ADMIN"),
+  moveProjectController
+);
 
 // Project-specific operations
 router.get(
@@ -142,5 +171,25 @@ router.post(
 // reports
 // notifications
 // dashboard
+// users
+/**
+ * GET /api/v1/user/preferences
+ * Get the logged-in user's preferences
+ */
+router.get(
+  "/api/v1/user/preferences",
+  authMiddleware,
+  getUserPreferencesController
+);
+
+/**
+ * PUT /api/v1/user/preferences
+ * Update the logged-in user's preferences
+ */
+router.put(
+  "/api/v1/user/preferences",
+  authMiddleware,
+  updateUserPreferencesController
+);
 
 export default router;
