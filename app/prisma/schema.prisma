@@ -23,23 +23,65 @@ model auditlog {
   @@index([userId], map: "AuditLog_userId_fkey")
 }
 
-model clockin {
-  id         String    @id @default(uuid()) 
-  shiftId    String
-  clockInAt  DateTime  @default(now())
-  clockOutAt DateTime?
-  method     String?
-  latitude   Float?
-  longitude  Float?
-  ipAddress  String?
-  geoCountry String?
-  geoCity    String?
-  device     String?
-  createdAt  DateTime  @default(now())
-  shift      shift     @relation(fields: [shiftId], references: [id], onDelete: Cascade, map: "ClockIn_shiftId_fkey")
-
-  @@index([shiftId], map: "ClockIn_shiftId_fkey")
+model clock {
+  id        String    @id @default(uuid())
+  shiftId   String
+  userId    String
+  createdById String
+  createdAt DateTime  @default(now())
+  shift     shift     @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  creator   user      @relation(fields: [createdById], references: [id])
+  clockIns  clockIn[]
+  clockOuts clockOut[]
+  
+  @@index([shiftId])
+  @@index([userId])
 }
+
+model reportSchedule {
+  id          String   @id @default(uuid())
+  reportType  String   // "PERSONAL" | "SHIFT" | "PROJECT" | "ORGANIZATION"
+  recipientId String
+  recipient   user     @relation(fields: [recipientId], references: [id])
+  frequency   String   // "DAILY" | "WEEKLY" | "MONTHLY"
+  timeConfig  String   // JSON string: {hour, minute, dayOfWeek?, dayOfMonth?}
+  createdAt   DateTime @default(now())
+
+  @@index([recipientId])
+}
+
+
+
+model clockIn {
+  id        String   @id @default(uuid())
+  clockId   String
+  clockAt   DateTime @default(now())
+  method    String?
+  latitude  Float?
+  longitude Float?
+  ipAddress String?
+  device    String?
+  createdAt DateTime @default(now())
+  clock     clock    @relation(fields: [clockId], references: [id], onDelete: Cascade)
+
+  @@index([clockId])
+}
+
+model clockOut {
+  id        String   @id @default(uuid())
+  clockId   String
+  clockAt   DateTime @default(now())
+  method    String?
+  latitude  Float?
+  longitude Float?
+  ipAddress String?
+  device    String?
+  createdAt DateTime @default(now())
+  clock     clock    @relation(fields: [clockId], references: [id], onDelete: Cascade)
+
+  @@index([clockId])
+}
+
 
 model exportfile {
   id          String     @id @default(uuid()) 
@@ -137,6 +179,40 @@ model paymentmethod {
   @@index([userId], map: "PaymentMethod_userId_fkey")
 }
 
+
+model task {
+  id          String    @id @default(uuid())
+  projectId   String
+  title       String
+  description String?
+  createdById String
+  customRules String?    // store JSON as string
+  status      String     @default("OPEN") // OPEN | IN_PROGRESS | COMPLETED
+  startTime   DateTime?
+  dueTime     DateTime?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime
+  project     project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy   user       @relation(fields: [createdById], references: [id])
+  assignees   taskAssignee[]
+}
+
+model taskAssignee {
+  id        String  @id @default(uuid())
+  taskId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  task task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId])
+  @@index([taskId])
+  @@index([userId])
+}
+
 model paymentprovider {
   id             String               @id @default(uuid()) 
   organizationId String
@@ -219,7 +295,25 @@ model project {
   timeentry      timeentry[]
 
   @@index([organizationId], map: "Project_organizationId_fkey")
+  ProjectUser ProjectUser[]
+  task task[]
+  leave leave[]
 }
+
+model ProjectUser {
+  id        String   @id @default(uuid())
+  projectId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  project project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    user    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+}
+
 
 model refreshtoken {
   id           String   @id @default(uuid()) 
@@ -240,7 +334,7 @@ model shift {
   endTime        DateTime?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime
-  clockin        clockin[]
+  clock        clock[]
   organization   organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, map: "Shift_organizationId_fkey")
   user           user         @relation(fields: [userId], references: [id], onDelete: Cascade, map: "Shift_userId_fkey")
 
@@ -330,8 +424,17 @@ model user {
   passwordresettoken                     passwordresettoken[]     @relation(map: "UserPreferences_userId_fkey")
   organization                           organization?            @relation(fields: [organizationId], references: [id], map: "User_organizationId_fkey")
   userpreferences                        userpreferences?
+  
 
   @@index([organizationId], map: "User_organizationId_fkey")
+  emailverificationtoken emailverificationtoken[] @relation(map: "EmailVerificationToken_userId_fkey")
+  ProjectUser ProjectUser[]
+  task task[]
+  taskAssignee taskAssignee[]
+  leaveAssignee leaveAssignee[]
+  leave leave[]
+  clock clock[]
+  reportSchedule reportSchedule[]
 }
 
 model passwordresettoken {
@@ -341,6 +444,15 @@ model passwordresettoken {
   expiresAt  DateTime
   createdAt  DateTime @default(now())
  user       user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "PasswordResetToken_userId_fkey")
+}
+
+model emailverificationtoken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user       user     @relation(fields: [userId], references: [id], onDelete: Cascade, map: "EmailVerificationToken_userId_fkey")
 }
 
 model userpreferences {
@@ -366,6 +478,47 @@ model webhookevent {
 
   @@index([organizationId], map: "WebhookEvent_organizationId_fkey")
 }
+
+model leave {
+  id             String       @id @default(uuid())
+  projectId      String
+  createdById    String
+  userId         String?
+  title          String
+  description    String?
+  type           String        // e.g., "VACATION", "SICK", "PUBLIC_HOLIDAY"
+  startDate      DateTime
+  endDate        DateTime
+  status         leave_status  @default(PENDING)
+  customRules    String?       // JSON string for special rules
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime
+  project        project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy      user          @relation(fields: [createdById], references: [id])
+  assignees      leaveAssignee[]
+}
+
+model leaveAssignee {
+  id        String   @id @default(uuid())
+  leaveId   String
+  userId    String
+  createdAt DateTime  @default(now())
+
+  leave leave @relation(fields: [leaveId], references: [id], onDelete: Cascade)
+  user  user  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([leaveId, userId])
+  @@index([leaveId])
+  @@index([userId])
+}
+
+enum leave_status {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
 
 enum organizationinvitation_role {
   ADMIN

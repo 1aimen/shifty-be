@@ -42,7 +42,37 @@ import {
   sendPasswordResetLinkController,
 } from "../modules/auth/auth.reset-password.controller";
 import { getAllUsersController } from "../modules/organization/organization.users.controller";
-
+import {
+  sendVerificationEmailController,
+  verifyEmailController,
+} from "../modules/auth/auth.email-verification.controller";
+import {
+  assignUserToProjectController,
+  getProjectUsersController,
+} from "../modules/project/project.users.controller";
+import {
+  createShiftsController,
+  assignUsersToShiftController,
+  updateShiftController,
+  getShiftController,
+  getShiftsController,
+  getShiftSettingsController,
+  updateShiftSettingsController,
+} from "../modules/shifts/shifts.controller";
+import {
+  assignUsersToLeaveController,
+  getLeaveController,
+  getLeavesController,
+  updateLeaveController,
+} from "../modules/leave/leave.controller";
+import {
+  clockInController,
+  clockOutController,
+  generateQRCodeController,
+  getShiftClocksController,
+  updateClockRulesController,
+  validateQRCodeController,
+} from "../modules/clock/clock.controller";
 const API_VERSION = config.api_version;
 const router = Router();
 
@@ -51,6 +81,12 @@ router.get(`/${API_VERSION}/healthcheck`, healthCheckController);
 router.post("/api/v1/auth/register", registerController);
 router.post("/api/v1/auth/login", loginController);
 router.post("/api/v1/auth/logout", authMiddleware, logoutController);
+router.post(
+  "/api/v1/auth/email-verification-request",
+  sendVerificationEmailController
+);
+router.post("/api/v1/auth/verify-email", verifyEmailController);
+
 // authentication
 router.use(authRoutes);
 // authorization
@@ -134,9 +170,24 @@ router.post(
   createProjectController
 );
 router.get(
-  "/organizations/:orgId/projects",
+  "/api/v1/organizations/:orgId/projects",
   authMiddleware,
   listProjectsController
+);
+
+router.post(
+  "/api/v1/projects/:projectId/assign-users",
+  authMiddleware,
+  authorize("ADMIN"),
+  assignUserToProjectController
+);
+
+// List all users of a project
+router.get(
+  "/api/v1/projects/:projectId/users",
+  authMiddleware,
+  authorize("ADMIN"),
+  getProjectUsersController
 );
 
 /**
@@ -185,8 +236,247 @@ router.post(
 );
 
 // shifts
-// clock-in
-// clock-out
+
+/**
+ * @route POST /api/v1/organizations/:orgId/shifts
+ * @desc Create one or multiple shifts under a project/organization
+ * @access Admin, Manager
+ */
+router.post(
+  "/api/v1/organizations/:orgId/shifts",
+  authMiddleware,
+  authorize("ADMIN", "MANAGER"),
+  createShiftsController
+);
+
+/**
+ * @route POST /api/v1/shifts/:shiftId/users
+ * @desc Assign multiple users to an existing shift
+ * @access Admin, Manager
+ */
+router.post(
+  "/api/v1/shifts/:shiftId/users",
+  authMiddleware,
+  authorize("ADMIN", "MANAGER"),
+  assignUsersToShiftController
+);
+
+/**
+ * @route PUT /api/v1/shifts/:shiftId
+ * @desc Update a shift (startTime, endTime, etc.)
+ * @access Admin, Manager
+ */
+router.put(
+  "/api/v1/shifts/:shiftId",
+  authMiddleware,
+  authorize("ADMIN", "MANAGER"),
+  updateShiftController
+);
+
+/**
+ * @route GET /api/v1/shifts/:shiftId
+ * @desc Get a single shift information
+ * @access Admin, Manager
+ */
+router.get(
+  "/api/v1/shifts/:shiftId",
+  authMiddleware,
+  authorize("ADMIN", "MANAGER"),
+  getShiftController
+);
+
+/**
+ * @route GET /api/v1/organizations/:orgId/shifts
+ * @desc Get all shifts under a project/organization
+ *       Managers see only their shifts
+ * @access Admin, Manager
+ */
+router.get(
+  "/api/v1/organizations/:orgId/shifts",
+  authMiddleware,
+  authorize("ADMIN", "MANAGER"),
+  getShiftsController
+);
+
+/**
+ * @route GET /api/v1/organizations/:orgId/shifts/settings
+ * @desc Get shift settings for the organization
+ * @access Admin, Manager
+ */
+router.get(
+  "/api/v1/organizations/:orgId/shifts/settings",
+  authMiddleware,
+  authorize("ADMIN", "MANAGER"),
+  getShiftSettingsController
+);
+
+/**
+ * @route PUT /api/v1/organizations/:orgId/shifts/settings
+ * @desc Update shift settings for the organization
+ * @access Admin, Manager
+ */
+router.put(
+  "/api/v1/organizations/:orgId/shifts/settings",
+  authMiddleware,
+  authorize("ADMIN", "MANAGER"),
+  updateShiftSettingsController
+);
+
+//tasks
+
+// create tasks (admin/manager/employee)
+// router.post(
+//   "/api/v1/organizations/:orgId/projects/:projectId/tasks",
+//   authMiddleware,
+//   authorize("ADMIN", "MANAGER", "EMPLOYEE"),
+//   createTasksController
+// );
+
+// // list tasks under project
+// router.get(
+//   "/api/v1/organizations/:orgId/projects/:projectId/tasks",
+//   authMiddleware,
+//   authorize("ADMIN", "MANAGER", "EMPLOYEE"),
+//   listTasksController
+// );
+
+// // get single task
+// router.get("/api/v1/tasks/:taskId", authMiddleware, authorize("ADMIN", "MANAGER", "EMPLOYEE"), getTaskController);
+
+// // update task
+// router.put("/api/v1/tasks/:taskId", authMiddleware, authorize("ADMIN", "MANAGER", "EMPLOYEE"), updateTaskController);
+
+// // assign users (admin/manager)
+// router.post("/api/v1/tasks/:taskId/assign", authMiddleware, authorize("ADMIN", "MANAGER"), assignUsersToTaskController);
+
+// // start/stop
+// router.post("/api/v1/tasks/:taskId/toggle", authMiddleware, authorize("ADMIN", "MANAGER", "EMPLOYEE"), toggleTaskController);
+
+// leaves
+
+/**
+ * @route POST /api/v1/projects/:projectId/leaves
+ * @desc Create one or multiple leaves under a project
+ *       Employees can only create for themselves
+ * @access Admin, Manager, Employee
+ */
+router.post(
+  "/api/v1/projects/:projectId/leaves",
+  authMiddleware,
+  authorize("ADMIN", "MANAGER", "EMPLOYEE"),
+  getLeaveController
+);
+
+/**
+ * @route GET /api/v1/projects/:projectId/leaves
+ * @desc Get all leaves under a project
+ *       Admin: all leaves in organization
+ *       Manager: leaves only in their projects
+ *       Employee: only their own leaves
+ * @access Admin, Manager, Employee
+ */
+router.get(
+  "/api/v1/projects/:projectId/leaves",
+  authMiddleware,
+  authorize("ADMIN", "MANAGER", "EMPLOYEE"),
+  getLeavesController
+);
+
+/**
+ * @route POST /api/v1/leaves/:leaveId/assign-users
+ * @desc Assign one or multiple users to a leave (e.g. public holiday)
+ *       Only Admins and Managers can assign users
+ * @access Admin, Manager
+ */
+router.post(
+  "/api/v1/leaves/:leaveId/assign-users",
+  authMiddleware,
+  authorize("ADMIN", "MANAGER"),
+  assignUsersToLeaveController
+);
+
+/**
+ * @route PUT /api/v1/leaves/:leaveId
+ * @desc Update a leave
+ *       Admins and Managers can update any
+ *       Employees can update only their own
+ * @access Admin, Manager, Employee
+ */
+router.put(
+  "/api/v1/leaves/:leaveId",
+  authMiddleware,
+  authorize("ADMIN", "MANAGER", "EMPLOYEE"),
+  updateLeaveController
+);
+
+/**
+ * @route GET /api/v1/leaves/:leaveId
+ * @desc Get a single leave
+ *       Admins and Managers can view any
+ *       Employees can view only their own
+ * @access Admin, Manager, Employee
+ */
+router.get(
+  "/api/v1/leaves/:leaveId",
+  authMiddleware,
+  authorize("ADMIN", "MANAGER", "EMPLOYEE"),
+  getLeaveController
+);
+
+// clock
+
+/**
+ * Clock in for a shift
+ */
+router.post(
+  "/api/v1/clock/:shiftId/clock-in",
+  authMiddleware,
+  clockInController
+);
+
+/**
+ * Clock out for a shift
+ */
+router.post(
+  "/api/v1/clock/:shiftId/clock-out",
+  authMiddleware,
+  clockOutController
+);
+
+/**
+ * Get all clock-ins and clock-outs for a shift
+ */
+router.get(
+  "/api/v1/clock/:shiftId/clocks",
+  authMiddleware,
+  getShiftClocksController
+);
+
+/**
+ * Update clock rules for a shift (requireGeo, requireDeviceLock)
+ * Only ADMIN or MANAGER should be able to update rules
+ */
+router.put(
+  "/api/v1/clock/:shiftId/clock-rules",
+  authMiddleware,
+  authorize("ADMIN", "MANAGER"),
+  updateClockRulesController
+);
+
+/**
+ * QR code endpoints
+ */
+router.get(
+  "/api/v1/clock/:shiftId/generate-qr-code",
+  authMiddleware,
+  generateQRCodeController
+);
+router.post(
+  "/api/v1/clock/:shiftId/validate-qr-code",
+  authMiddleware,
+  validateQRCodeController
+);
+
 // geolocation
 // reports
 // notifications
@@ -217,7 +507,7 @@ router.put(
  * as admin update a user role as under your organization
  */
 router.put(
-  "/api/v1/user/:userId/role",
+  "/api/v1/users/:userId/role",
   authMiddleware,
   authorize("ADMIN"),
   updateUserRoleController

@@ -6,17 +6,10 @@ import { UserRole } from "../../models/enums";
 
 /**
  * @swagger
- * tags:
- *   name: User Role Management
- *   description: Manage user roles within the same organization (Admin only)
- */
-
-/**
- * @swagger
- * /api/v1/user/{userId}/role:
+ * /api/v1/users/{userId}/role:
  *   put:
  *     summary: Update a user's role (Admin only)
- *     tags: [User Role Management]
+ *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     parameters:

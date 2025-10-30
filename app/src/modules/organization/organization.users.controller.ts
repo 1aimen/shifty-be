@@ -8,7 +8,7 @@ import { OrganizationUserService } from "./organization.users.service";
  * /api/v1/organizations/{orgId}/users:
  *   get:
  *     summary: View all users under an organization (Admin only)
- *     tags: [User]
+ *     tags: [Organization]
  *     security:
  *       - bearerAuth: []
  *     parameters:

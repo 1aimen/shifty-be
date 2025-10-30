@@ -20,10 +20,10 @@ const options = {
     info: {
       title: "Shifty API",
       version: "1.0.0",
-      description: "Shift and employee clock in API",
+      description: "Employee Shift & clock in management API",
       contact: {
-        name: "Your Name",
-        email: "info@email.com",
+        name: "Aimen BENNACER",
+        email: "aimenbennacer1@email.com",
       },
     },
     components: {
