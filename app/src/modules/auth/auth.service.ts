@@ -41,7 +41,7 @@ export class AuthService {
         userId: user.id,
         language: "fr",
         darkMode: false,
-        notifications: true,
+        notifications: false,
         updatedAt: now,
       },
     });

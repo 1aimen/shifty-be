@@ -34,6 +34,12 @@ import {
   getUserPreferencesController,
   updateUserPreferencesController,
 } from "../modules/settings/settings.controller";
+import { updateUserRoleController } from "../modules/users/userrole.controller";
+import {
+  getPasswordResetLinkController,
+  resetPasswordController,
+  sendPasswordResetLinkController,
+} from "../modules/auth/auth.reset-password.controller";
 
 const API_VERSION = config.api_version;
 const router = Router();
@@ -164,6 +170,7 @@ router.post(
   authMiddleware,
   inviteUserToOrganizationController
 );
+
 // shifts
 // clock-in
 // clock-out
@@ -191,5 +198,42 @@ router.put(
   authMiddleware,
   updateUserPreferencesController
 );
+
+/**
+ * PUT /api/v1/user/:userId/role
+ * as admin update a user role as under your organization
+ */
+router.put(
+  "/api/v1/user/:userId/role",
+  authMiddleware,
+  authorize("ADMIN"),
+  updateUserRoleController
+);
+
+/**
+ * @route POST /api/v1/users/:id/reset-password
+ * @desc Admin sends password reset link to a user
+ */
+router.post(
+  "/api/v1/users/:id/reset-password",
+  authMiddleware,
+  authorize("ADMIN"),
+  sendPasswordResetLinkController
+);
+
+/**
+ * @route POST /api/v1/auth/reset-password-request
+ * @desc Non-logged-in user requests a password reset link by email
+ */
+router.post(
+  "/api/v1/auth/reset-password-request",
+  getPasswordResetLinkController
+);
+
+/**
+ * @route POST /api/v1/auth/reset-password
+ * @desc Reset password using token
+ */
+router.post("/api/v1/auth/reset-password", resetPasswordController);
 
 export default router;
