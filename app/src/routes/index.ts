@@ -26,6 +26,20 @@ import {
   getOrganizationSettingsController,
   updateOrganizationSettingsController,
 } from "../modules/organization/organization.settings.controller";
+import {
+  duplicateProjectController,
+  moveProjectController,
+} from "../modules/organization/organization.project.controller";
+import {
+  getUserPreferencesController,
+  updateUserPreferencesController,
+} from "../modules/settings/settings.controller";
+import { updateUserRoleController } from "../modules/users/userrole.controller";
+import {
+  getPasswordResetLinkController,
+  resetPasswordController,
+  sendPasswordResetLinkController,
+} from "../modules/auth/auth.reset-password.controller";
 
 const API_VERSION = config.api_version;
 const router = Router();
@@ -106,7 +120,28 @@ router.post(
   authorize("ADMIN"),
   createProjectController
 );
-router.get("/organizations/:orgId/projects", listProjectsController);
+router.get(
+  "/organizations/:orgId/projects",
+  authMiddleware,
+  listProjectsController
+);
+
+/**
+ * Only ADMIN can duplicate or move projects
+ */
+router.post(
+  "/api/v1/projects/:projectId/duplicate",
+  authMiddleware,
+  authorize("ADMIN"),
+  duplicateProjectController
+);
+
+router.post(
+  "/api/v1/projects/:projectId/move",
+  authMiddleware,
+  authorize("ADMIN"),
+  moveProjectController
+);
 
 // Project-specific operations
 router.get(
@@ -135,6 +170,7 @@ router.post(
   authMiddleware,
   inviteUserToOrganizationController
 );
+
 // shifts
 // clock-in
 // clock-out
@@ -142,5 +178,62 @@ router.post(
 // reports
 // notifications
 // dashboard
+// users
+/**
+ * GET /api/v1/user/preferences
+ * Get the logged-in user's preferences
+ */
+router.get(
+  "/api/v1/user/preferences",
+  authMiddleware,
+  getUserPreferencesController
+);
+
+/**
+ * PUT /api/v1/user/preferences
+ * Update the logged-in user's preferences
+ */
+router.put(
+  "/api/v1/user/preferences",
+  authMiddleware,
+  updateUserPreferencesController
+);
+
+/**
+ * PUT /api/v1/user/:userId/role
+ * as admin update a user role as under your organization
+ */
+router.put(
+  "/api/v1/user/:userId/role",
+  authMiddleware,
+  authorize("ADMIN"),
+  updateUserRoleController
+);
+
+/**
+ * @route POST /api/v1/users/:id/reset-password
+ * @desc Admin sends password reset link to a user
+ */
+router.post(
+  "/api/v1/users/:id/reset-password",
+  authMiddleware,
+  authorize("ADMIN"),
+  sendPasswordResetLinkController
+);
+
+/**
+ * @route POST /api/v1/auth/reset-password-request
+ * @desc Non-logged-in user requests a password reset link by email
+ */
+router.post(
+  "/api/v1/auth/reset-password-request",
+  getPasswordResetLinkController
+);
+
+/**
+ * @route POST /api/v1/auth/reset-password
+ * @desc Reset password using token
+ */
+router.post("/api/v1/auth/reset-password", resetPasswordController);
 
 export default router;

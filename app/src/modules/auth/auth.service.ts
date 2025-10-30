@@ -36,6 +36,15 @@ export class AuthService {
       },
     });
 
+    await prisma.userpreferences.create({
+      data: {
+        userId: user.id,
+        language: "fr",
+        darkMode: false,
+        notifications: false,
+        updatedAt: now,
+      },
+    });
     const accessToken = generateAccessToken({ userId: user.id });
     const refreshToken = generateRefreshToken({ userId: user.id });
 
