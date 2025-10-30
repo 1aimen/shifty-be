@@ -1,7 +1,7 @@
 // src/modules/userrole/userrole.controller.ts
 import { Response } from "express";
 import { AuthRequest } from "../../types/auth.types";
-import { UserRoleService } from "./userrole.service";
+import { UserRoleService } from "./users.role.service";
 import { UserRole } from "../../models/enums";
 
 /**

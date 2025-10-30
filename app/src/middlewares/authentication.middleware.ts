@@ -39,7 +39,11 @@ export const authMiddleware = async (
     if (!user) return res.status(403).json({ message: "User not found" });
 
     // Attach full user object to req
-    req.user = { id: user.id, role: user.role };
+    req.user = {
+      id: user.id,
+      role: user.role,
+      organizationId: user.organizationId!,
+    };
 
     next();
   } catch (err) {
