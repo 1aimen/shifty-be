@@ -4,17 +4,10 @@ import { OrganizationSettingsService } from "./organization.settings.service";
 
 /**
  * @swagger
- * tags:
- *   name: Organization Settings
- *   description: Manage organization-level settings
- */
-
-/**
- * @swagger
  * /api/v1/organizations/{orgId}/settings:
  *   get:
  *     summary: Get organization settings
- *     tags: [Organization Settings]
+ *     tags: [Organization]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -55,7 +48,7 @@ export const getOrganizationSettingsController = async (
  * /api/v1/organizations/{orgId}/settings:
  *   put:
  *     summary: Update organization settings
- *     tags: [Organization Settings]
+ *     tags: [Organization]
  *     security:
  *       - bearerAuth: []
  *     parameters:

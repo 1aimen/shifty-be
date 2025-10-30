@@ -4,17 +4,10 @@ import { InvitationService } from "./organization.invitation.service";
 
 /**
  * @swagger
- * tags:
- *   name: User
- *   description: User management endpoints
- */
-
-/**
- * @swagger
  * /api/v1/organizations/{orgId}/invite:
  *   post:
  *     summary: Invite a user to an organization
- *     tags: [User]
+ *     tags: [Organization]
  *     security:
  *       - bearerAuth: []
  *     parameters:

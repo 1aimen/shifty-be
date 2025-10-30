@@ -46,10 +46,10 @@ export const sendPasswordResetLinkController = async (
 
 /**
  * @swagger
- * /api/v1/users/reset-password-request:
+ * /api/v1/auth/reset-password-request:
  *   post:
  *     summary: Request password reset link by email (for non-logged-in users)
- *     tags: [Users]
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -81,10 +81,10 @@ export const getPasswordResetLinkController = async (
 
 /**
  * @swagger
- * /api/v1/users/reset-password:
+ * /api/v1/auth/reset-password:
  *   post:
  *     summary: Reset password using token
- *     tags: [Users]
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
