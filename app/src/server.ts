@@ -18,7 +18,7 @@ const options = {
   definition: {
     openapi: "3.1.0",
     info: {
-      title: "Shifty API",
+      title: "Timetract API",
       version: "1.0.0",
       description: "Employee Shift & clock in management API",
       contact: {

@@ -73,6 +73,22 @@ import {
   updateClockRulesController,
   validateQRCodeController,
 } from "../modules/clock/clock.controller";
+import {
+  generateOrganizationReportController,
+  generatePersonalReportController,
+  generateProjectReportController,
+  generateShiftReportController,
+  scheduleReportController,
+} from "../modules/reports/reports.controller";
+import {
+  assignUsersToTask,
+  createTasks,
+  getTask,
+  getTasks,
+  startStopTask,
+  updateTask,
+  updateTaskSettings,
+} from "../modules/tasks/tasks.controller";
 const API_VERSION = config.api_version;
 const router = Router();
 
@@ -479,6 +495,39 @@ router.post(
 
 // geolocation
 // reports
+
+router.get(
+  "/api/v1/reports/personal/:userId",
+  authMiddleware,
+  generatePersonalReportController
+);
+
+router.get(
+  "/api/v1/reports/shift/:shiftId",
+  authMiddleware,
+  generateShiftReportController
+);
+
+router.get(
+  "/api/v1/reports/project/:projectId",
+  authorize("ADMIN", "MANAGER"),
+  authMiddleware,
+  generateProjectReportController
+);
+
+router.get(
+  "/api/v1/reports/organization/:orgId",
+  authMiddleware,
+  authorize("ADMIN"),
+  generateOrganizationReportController
+);
+
+router.post(
+  "/api/v1/reports/schedule",
+  authMiddleware,
+  scheduleReportController
+);
+
 // notifications
 // dashboard
 // users
@@ -538,5 +587,32 @@ router.post(
  * @desc Reset password using token
  */
 router.post("/api/v1/auth/reset-password", resetPasswordController);
+
+// tasks
+
+// Create one or multiple tasks under a project
+router.post("/api/v1/projects/:projectId/tasks", authMiddleware, createTasks);
+
+// Assign multiple users to a task
+router.post("/api/v1/tasks/:taskId/assign", authMiddleware, assignUsersToTask);
+
+// Update task details
+router.patch("/api/v1/tasks/:taskId", authMiddleware, updateTask);
+
+// Update task settings (priority, deadline, custom rules)
+router.patch(
+  "/api/v1/tasks/:taskId/settings",
+  authMiddleware,
+  updateTaskSettings
+);
+
+// Start or stop a task
+router.patch("/api/v1/tasks/:taskId/action", authMiddleware, startStopTask);
+
+// Get a single task
+router.get("/api/v1/tasks/:taskId", authMiddleware, getTask);
+
+// Get all tasks under a project
+router.get("/api/v1/projects/:projectId/tasks", authMiddleware, getTasks);
 
 export default router;

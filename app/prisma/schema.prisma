@@ -50,6 +50,21 @@ model reportSchedule {
   @@index([recipientId])
 }
 
+model notification {
+  id          String    @id @default(uuid())
+  userId      String
+  type        String   
+  title       String
+  message     String
+  link        String?   
+  read        Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  user        user      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([type])
+}
 
 
 model clockIn {
@@ -435,6 +450,7 @@ model user {
   leave leave[]
   clock clock[]
   reportSchedule reportSchedule[]
+  notification notification[]
 }
 
 model passwordresettoken {

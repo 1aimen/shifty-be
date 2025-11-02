@@ -1,5 +1,8 @@
 import crypto from "crypto";
 import { prisma } from "../../utils/prisma.utils";
+import { sendEmail } from "../../utils/email.utils";
+import { config } from "../../config";
+import { hashPassword } from "../../utils/auth.utils";
 // import { sendEmail } from "../utils/email"; // your email sending utility
 
 export class userPasswordService {
@@ -15,10 +18,19 @@ export class userPasswordService {
       data: { userId, token, expiresAt },
     });
 
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    // const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
 
-    // await sendEmail({ to: user.email, subject: "Password Reset Request", text: `Click here to reset: ${resetUrl}` });
+    const resetUrl = `${config.internal_app_url}/reset-password?token=${token}`;
 
+    await sendEmail({
+      to: user.email,
+      template: "reset-password",
+      subject: "Password Reset Request",
+      data: {
+        userName: user.username || user.email,
+        resetLink: resetUrl,
+      },
+    });
     return { message: "Password reset link sent successfully", resetUrl };
   }
 
@@ -34,10 +46,18 @@ export class userPasswordService {
       data: { userId: user.id, token, expiresAt },
     });
 
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    // const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    const resetUrl = `${config.internal_app_url}/reset-password?token=${token}`;
 
-    // await sendEmail({ to: user.email, subject: "Password Reset Request", text: `Click here to reset: ${resetUrl}` });
-
+    await sendEmail({
+      to: user.email,
+      template: "reset-password",
+      subject: "Password Reset Request",
+      data: {
+        userName: user.username || user.email,
+        resetLink: resetUrl,
+      },
+    });
     return { message: "Password reset link sent successfully", resetUrl };
   }
 
@@ -50,10 +70,11 @@ export class userPasswordService {
 
     if (!resetToken) throw new Error("Invalid token");
     if (resetToken.expiresAt < new Date()) throw new Error("Token expired");
+    const hashed = await hashPassword(newPassword);
 
     await prisma.user.update({
       where: { id: resetToken.userId },
-      data: { password: newPassword }, // hash in production
+      data: { password: hashed },
     });
 
     await prisma.passwordresettoken.delete({ where: { id: resetToken.id } });

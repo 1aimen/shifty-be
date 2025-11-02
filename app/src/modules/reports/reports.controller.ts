@@ -14,10 +14,29 @@ import { AuthRequest } from "../../types/auth.types";
  * @swagger
  * /api/v1/reports/personal/{userId}:
  *   get:
- *     summary: Generate personal report
+ *     summary: Generate a personal report for a specific user
  *     tags: [Report]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the user to generate the report for
+ *       - in: query
+ *         name: format
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [PDF, CSV, JSON]
+ *         description: Format of the generated report
+ *     responses:
+ *       200:
+ *         description: Successfully generated the personal report
+ *       403:
+ *         description: Forbidden or access denied
  */
 export const generatePersonalReportController = async (
   req: AuthRequest,
@@ -44,10 +63,29 @@ export const generatePersonalReportController = async (
  * @swagger
  * /api/v1/reports/shift/{shiftId}:
  *   get:
- *     summary: Generate shift report
+ *     summary: Generate a shift report
  *     tags: [Report]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: shiftId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the shift
+ *       - in: query
+ *         name: format
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [PDF, CSV, JSON]
+ *         description: Format of the generated report
+ *     responses:
+ *       200:
+ *         description: Successfully generated the shift report
+ *       403:
+ *         description: Forbidden or access denied
  */
 export const generateShiftReportController = async (
   req: AuthRequest,
@@ -74,10 +112,29 @@ export const generateShiftReportController = async (
  * @swagger
  * /api/v1/reports/project/{projectId}:
  *   get:
- *     summary: Generate project report
+ *     summary: Generate a project report
  *     tags: [Report]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the project
+ *       - in: query
+ *         name: format
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [PDF, CSV, JSON]
+ *         description: Format of the generated report
+ *     responses:
+ *       200:
+ *         description: Successfully generated the project report
+ *       403:
+ *         description: Forbidden or access denied
  */
 export const generateProjectReportController = async (
   req: AuthRequest,
@@ -104,10 +161,29 @@ export const generateProjectReportController = async (
  * @swagger
  * /api/v1/reports/organization/{orgId}:
  *   get:
- *     summary: Generate organization report
+ *     summary: Generate an organization-wide report
  *     tags: [Report]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: orgId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the organization
+ *       - in: query
+ *         name: format
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [PDF, CSV, JSON]
+ *         description: Format of the generated report
+ *     responses:
+ *       200:
+ *         description: Successfully generated the organization report
+ *       403:
+ *         description: Forbidden or access denied
  */
 export const generateOrganizationReportController = async (
   req: AuthRequest,
@@ -134,10 +210,41 @@ export const generateOrganizationReportController = async (
  * @swagger
  * /api/v1/reports/schedule:
  *   post:
- *     summary: Schedule a report
+ *     summary: Schedule a report for automatic generation
  *     tags: [Report]
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - reportType
+ *               - recipientId
+ *               - frequency
+ *               - timeConfig
+ *             properties:
+ *               reportType:
+ *                 type: string
+ *                 enum: [PERSONAL, SHIFT, PROJECT, ORGANIZATION]
+ *                 description: Type of report to schedule
+ *               recipientId:
+ *                 type: string
+ *                 description: ID of the user to receive the report
+ *               frequency:
+ *                 type: string
+ *                 enum: [DAILY, WEEKLY, MONTHLY]
+ *                 description: Frequency of the report
+ *               timeConfig:
+ *                 type: object
+ *                 description: Additional time configuration (e.g., hour or day)
+ *     responses:
+ *       201:
+ *         description: Report successfully scheduled
+ *       400:
+ *         description: Invalid input or scheduling failed
  */
 export const scheduleReportController = async (
   req: AuthRequest,

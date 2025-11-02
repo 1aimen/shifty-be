@@ -1,18 +1,17 @@
 // src/modules/reports/report.service.ts
 import { AppError } from "../../middlewares/error.middleware";
 import { prisma } from "../../utils/prisma.utils";
+import { PdfUtils } from "../../utils/pdf.utils";
+import path from "path";
 
 export const ReportService = {
-  /**
-   * Generate a personal report
-   */
   async generatePersonalReport(
     userId: string,
     requesterId: string,
     requesterRole: string,
     format: "CSV" | "PDF" | "EXCEL"
   ) {
-    // check permissions: self, admin, or manager of any project of the user
+    // permission check (unchanged)
     if (userId !== requesterId && requesterRole !== "ADMIN") {
       const isManager = await prisma.projectUser.findFirst({
         where: {
@@ -21,10 +20,8 @@ export const ReportService = {
         },
         include: { project: true },
       });
-
-      if (!isManager) {
+      if (!isManager)
         throw new AppError("You are not authorized to generate this report");
-      }
     }
 
     // fetch data
@@ -32,12 +29,16 @@ export const ReportService = {
       where: { userId },
     });
 
+    if (format === "PDF") {
+      const filename = `personal_report_${userId}_${Date.now()}`;
+      const filePath = await PdfUtils.exportPDF(timeEntries, filename);
+      return { path: filePath, format };
+    }
+
+    // for now just return raw data for CSV/EXCEL
     return { data: timeEntries, format };
   },
 
-  /**
-   * Generate a shift report
-   */
   async generateShiftReport(
     shiftId: string,
     requesterId: string,
@@ -50,21 +51,16 @@ export const ReportService = {
     });
     if (!shift) throw new AppError("Shift not found");
 
-    // check permissions: shift owner, admin, or manager of any project in the org
     if (shift.userId !== requesterId && requesterRole !== "ADMIN") {
       const isManagerInOrg = await prisma.projectUser.findFirst({
         where: {
           userId: requesterId,
-          project: {
-            organizationId: shift.organizationId,
-          },
+          project: { organizationId: shift.organizationId },
         },
         include: { project: true },
       });
-
-      if (!isManagerInOrg) {
+      if (!isManagerInOrg)
         throw new AppError("You are not authorized to generate this report");
-      }
     }
 
     const clocks = await prisma.clock.findMany({
@@ -72,12 +68,15 @@ export const ReportService = {
       include: { clockIns: true, clockOuts: true },
     });
 
+    if (format === "PDF") {
+      const filename = `shift_report_${shiftId}_${Date.now()}`;
+      const filePath = await PdfUtils.exportPDF(clocks, filename);
+      return { path: filePath, format };
+    }
+
     return { data: clocks, format };
   },
 
-  /**
-   * Generate a project report
-   */
   async generateProjectReport(
     projectId: string,
     requesterId: string,
@@ -89,24 +88,25 @@ export const ReportService = {
     });
     if (!project) throw new AppError("Project not found");
 
-    // check permissions: admin or associated user in ProjectUser
     if (requesterRole !== "ADMIN") {
       const isUserInProject = await prisma.projectUser.findFirst({
         where: { projectId, userId: requesterId },
       });
-
-      if (!isUserInProject) {
+      if (!isUserInProject)
         throw new AppError("You are not authorized to generate this report");
-      }
     }
 
     const tasks = await prisma.task.findMany({ where: { projectId } });
+
+    if (format === "PDF") {
+      const filename = `project_report_${projectId}_${Date.now()}`;
+      const filePath = await PdfUtils.exportPDF(tasks, filename);
+      return { path: filePath, format };
+    }
+
     return { data: tasks, format };
   },
 
-  /**
-   * Generate an organization report
-   */
   async generateOrganizationReport(
     orgId: string,
     requesterId: string,
@@ -120,12 +120,16 @@ export const ReportService = {
     const shifts = await prisma.shift.findMany({
       where: { organizationId: orgId },
     });
+
+    if (format === "PDF") {
+      const filename = `organization_report_${orgId}_${Date.now()}`;
+      const filePath = await PdfUtils.exportPDF(shifts, filename);
+      return { path: filePath, format };
+    }
+
     return { data: shifts, format };
   },
 
-  /**
-   * Schedule automatic reports
-   */
   async scheduleReport(
     reportType: "PERSONAL" | "SHIFT" | "PROJECT" | "ORGANIZATION",
     recipientId: string,
